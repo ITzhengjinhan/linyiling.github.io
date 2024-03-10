@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>流星雨3D旋转相册</title>
+		<link rel="stylesheet" href="./index1.css">
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			html,
+			body {
+				height: 100%;
+			}
+
+			body {
+				display: flex;
+				perspective: 1000px;
+				transform-style: preserve-3d;
+				/* background-image: url(./img/3.png); */
+				background: #0c0c0c;
+				height: 100%;
+				width: 100%;
+			}
+
+			.container {
+				display: none;
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100vw;
+				height: 100vh;
+				z-index: 99999;
+				background-color: rgba(0, 0, 0, 0.85);
+			}
+
+			.main {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				width: 300px;
+				height: 300px;
+				z-index: 999999;
+				transform: translate(-50%, -50%);
+				-webkit-perspective: 1500px;
+				-moz-perspective: 1500px;
+			}
+
+			.box {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 300px;
+				height: 300px;
+				transition: all 1s;
+				backface-visibility: hidden;
+				border-radius: 10px;
+				cursor: pointer;
+			}
+
+			.box p {
+				text-align: center;
+				line-height: 300px;
+				color: white;
+			}
+
+			.b1 {
+				background: skyblue;
+			}
+
+			.b2 {
+				background: tomato;
+				transform: rotateY(-180deg);
+			}
+
+			#box {
+				z-index: 999;
+				position: relative;
+				display: flex;
+				width: 100px;
+				height: 180px;
+				margin: auto;
+				transform-style: preserve-3d;
+				transform: rotateX(-10deg);
+			}
+
+			#box>div {
+				transform-style: preserve-3d;
+				position: absolute;
+				left: 0;
+				top: 0;
+				width: 100%;
+				height: 100%;
+				line-height: 100px;
+				font-size: 50px;
+				text-align: center;
+				box-shadow: 0 0 10px #fff;
+				-webkit-box-reflect: below 10px -webkit-linear-gradient(top, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, .8) 100%);
+			}
+
+			#box p {
+				position: absolute;
+				left: 0;
+				top: 0;
+				bottom: 0;
+				right: 0;
+				margin: auto;
+				width: 1200px;
+				height: 1200px;
+				background: -webkit-radial-gradient(center center, 600px 600px, rgba(50, 50, 50, 1), rgba(0, 0, 0, 0));
+				border-radius: 50%;
+				transform: rotateX(90deg) translate3d(-600px, 0, -105px);
+			}
+
+			/* 下雨特效 */
+			#codepen-link {
+				position: absolute;
+				bottom: 30px;
+				right: 30px;
+				height: 40px;
+				width: 40px;
+				z-index: 10;
+				border-radius: 50%;
+				box-sizing: border-box;
+				background-image: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/544318/logo.jpg");
+				background-position: center center;
+				background-size: cover;
+				opacity: 0.5;
+				-webkit-transition: all 0.25s;
+				transition: all 0.25s;
+			}
+
+			#codepen-link:hover {
+				opacity: 0.8;
+				box-shadow: 0 0 6px #efefef;
+			}
+		</style>
+
+	</head>
+	<body>
+		<audio autoplay="autopaly" src="/static/1.m4a">
+		</audio>
+		<div class="container">
+			<div class="main">
+				<div class="box b1">
+					<p></p>
+				</div>
+				<div class="box b2">
+					<p>傻白甜</p>
+				</div>
+			</div>
+		</div>
+		<div id="img">
+			<!-- 相册 -->
+			<div id="box">
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+			</div>
+			<!-- 流星 -->
+			<div class="stars">
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+				<div class="star"></div>
+			</div>
+			<script>
+				setTimeout(init, 100);
+				var isDragging = false; // 标志是否正在拖动
+				function init() {
+					var obox = document.getElementById('box'),
+						aDiv = obox.getElementsByTagName('div');
+
+					for (var i = 0; i < aDiv.length; i++) {
+						aDiv[i].style.background =
+							`url(/static/${i}.jpg) center/cover`;
+						aDiv[i].style.transform = "rotateY(" + (i * 36) + "deg) translate3d(0,0,200px)";
+						aDiv[i].style.transition = "transform 1s " + (aDiv.length - i) * 0.2 + "s";
+					}
+					var sX,
+						sY,
+						nX,
+						nY,
+						desX = 0,
+						desY = 0,
+						tX = 0,
+						tY = 10,
+						index = 0; //滚轮初始值
+					document.addEventListener('touchstart', function(e) {
+						clearInterval(obox.timer);
+						var touch = e.touches[0];
+						var sX = touch.clientX,
+							sY = touch.clientY;
+						document.addEventListener('touchmove', function(e) {
+							e.stopPropagation();
+							var touch = e.touches[0];
+							var nX = touch.clientX,
+								nY = touch.clientY;
+							var desX = nX - sX;
+							var desY = nY - sY;
+							if (Math.abs(desX) > Math.abs(desY)) { // 判断是水平移动还是垂直移动
+								e.preventDefault(); // 阻止默认的滑动行为（垂直方向）
+								tX += desX * 0.2;
+								obox.style.transform = "rotateX(" + (-tY) + "deg) rotateY(" + tX + "deg)";
+							}
+							if (desX > 0 || desY > 0) { // 设置一个阈值，超过阈值则取消点击事件触发
+								isDragging = true;
+							}
+						});
+						document.addEventListener('touchend', function(e) {
+							isDragging = false;
+							document.removeEventListener('touchmove', null);
+							document.removeEventListener('touchend', null);
+							obox.timer = setInterval(function() {
+								desX *= 0.95;
+								desY *= 0.95;
+								tX += desX * 0.1;
+								tY += desY * 0.1;
+								obox.style.transform = "rotateX(" + (-tY) + "deg) rotateY(" + tX + "deg)";
+								if (Math.abs(desX) < 0.5 && Math.abs(desY) < 0.5) {
+									clearInterval(obox.timer);
+								}
+							}, 13);
+						});
+					});
+					//滚轮放大缩小
+					mousewheel(document, function(e) {
+						e = e || window.event;
+						var d = e.wheelDelta / 120 || -e.detail / 3;
+						if (d > 0) {
+							index -= 20;
+						} else {
+							index += 30;
+						}
+						(index < (-1050) && (index = (-1050)));
+						document.body.style.perspective = 1000 + index + "px";
+					})
+
+					function mousewheel(obj, fn) {
+						document.onmousewheel === null ? obj.onmousewheel = fn : addEvent(obj, "DOMMouseScroll", fn)
+					}
+
+					function addEvent(obj, eName, fn) {
+						obj.attachEvent ? obj.attachEvent("on" + eName, fn) : obj.addEventListener(eName, fn);
+					}
+				}
+			</script>
+			<!-- 下雨特效 -->
+			<script>
+				(function(window, document) {
+					var Vector2 = (function() {
+						function Vector2(x, y) {
+							this.x = x || 0;
+							this.y = y || 0;
+						}
+						return Vector2;
+					})();
+
+					Vector2.prototype.add = function(addend) {
+						this.x += addend.x;
+						this.y += addend.y;
+					};
+
+					var RainDrop = (function() {
+						function RainDrop(parent) {
+							this.size = 2;
+							this.parent = parent;
+							this.init();
+						}
+						return RainDrop;
+					})();
+
+					RainDrop.prototype.init = function() {
+						this.life = 0;
+						this.ttl = Math.random() * 500 + 300;
+						this.position = new Vector2(Math.random() * window.innerWidth, 0);
+						this.velocity = new Vector2(
+							0.5 - Math.random() * 1,
+							Math.random() * 1 + 0.2
+						);
+						this.terminalVelocity = 8;
+					};
+
+					RainDrop.prototype.update = function() {
+						if (
+							this.position.x > window.innerWidth ||
+							this.position.x < -this.size ||
+							this.life > this.ttl
+						)
+							this.init();
+						if (this.position.y > this.parent.floor) {
+							this.position.y = this.parent.floor - this.size;
+							this.velocity.y *= -0.2 - Math.random() * 0.2;
+						}
+						this.life++;
+						this.position.add(this.velocity);
+						this.velocity.y += 0.1;
+					};
+
+					var Rain = (function() {
+						function Rain(args) {
+							this.props = args;
+							this.rainDrops = [];
+							this.init();
+						}
+						return Rain;
+					})();
+
+					Rain.prototype.init = function() {
+						this.createCanvas();
+						this.resize();
+						this.loop();
+					};
+
+					Rain.prototype.resize = function() {
+						var attr =
+							"position: absolute; z-index: 0; top: 0; left: 0; height: 100vh; width: 100vw;";
+
+						this.canvas.setAttribute("style", attr);
+
+						this.dimensions = {
+							width: window.innerWidth,
+							height: window.innerHeight
+						};
+
+						this.canvas.width = this.dimensions.width;
+						this.canvas.height = this.dimensions.height;
+						this.floor = this.dimensions.height * 0.7;
+					};
+
+					Rain.prototype.createCanvas = function() {
+						this.canvas = document.createElement("canvas");
+
+						this.ctx = this.canvas.getContext("2d");
+
+						document.body.appendChild(this.canvas);
+					};
+
+					Rain.prototype.draw = function() {
+						this.ctx.fillStyle = this.props.backgroundColor;
+						this.ctx.fillRect(0, 0, this.dimensions.width, this.floor);
+						for (var i = 0, len = this.rainDrops.length; i < len; i++) {
+							var rainDrop = this.rainDrops[i];
+							rainDrop.update();
+							this.ctx.fillStyle = this.props.rainColor;
+							this.ctx.fillRect(
+								rainDrop.position.x,
+								rainDrop.position.y,
+								rainDrop.size,
+								rainDrop.size
+							);
+						}
+						this.reflect();
+					};
+
+					Rain.prototype.reflect = function() {
+						var grad = this.ctx.createLinearGradient(
+							this.dimensions.width / 2,
+							this.floor * 0.6,
+							this.dimensions.width / 2,
+							this.floor
+						);
+						grad.addColorStop(0, "rgba(20,30,40,1)");
+						grad.addColorStop(1, "rgba(20,30,40,0)");
+						this.ctx.save();
+						this.ctx.scale(1, -1);
+						this.ctx.translate(0, this.floor * -2);
+						this.ctx.filter = "blur(2px) saturate(150%)";
+						this.ctx.drawImage(
+							this.canvas,
+							0,
+							0,
+							this.dimensions.width,
+							this.floor,
+							0,
+							0,
+							this.dimensions.width,
+							this.floor
+						);
+						this.ctx.fillStyle = grad;
+						this.ctx.fillRect(0, 0, this.dimensions.width, this.floor);
+						this.ctx.restore();
+					};
+
+					Rain.prototype.loop = function() {
+						var timeout,
+							self = this;
+						if (self.rainDrops.length < self.props.rainDropCount) {
+							timeout = window.setTimeout(function() {
+								self.rainDrops.push(new RainDrop(self));
+							}, Math.random() * 1000);
+						} else if (timeout) {
+							timeout = null;
+							window.clearTimeout(timeout);
+						}
+						self.draw();
+						window.requestAnimationFrame(self.loop.bind(self));
+					};
+
+					window.onload = function() {
+						var args = {
+							rainDropCount: 30,
+							rainColor: "rgba(150,180,255,0.8)",
+							backgroundColor: "rgba(10,10,10,0.5)"
+						};
+
+						var rain = new Rain(args);
+
+						window.onresize = function() {
+							rain.resize();
+						};
+					};
+
+					window.requestAnimationFrame = (function() {
+						return (
+							window.requestAnimationFrame ||
+							window.webkitRequestAnimationFrame ||
+							window.mozRequestAnimationFrame ||
+							window.oRequestAnimationFrame ||
+							window.msRequestAnimationFrame ||
+							function(callback) {
+								window.setTimeout(callback, 1000 / 60);
+							}
+						);
+					})();
+				})(this, document);
+			</script>
+			<script>
+				document.querySelector("#box").addEventListener("click", function(e) {
+					if (!isDragging) {
+						var b1 = document.querySelector('.b1');
+						var b2 = document.querySelector('.b2');
+						var container = document.querySelector('.container');
+						b1.style.background = e.target.style.background;
+						setTimeout(() => {
+							b2.style.transform = "rotateY(-180deg)";
+							b1.style.transform = "rotateY(0deg)";
+							container.style.display = 'inline-block';
+						}, 500)
+					}
+				})
+			</script>
+			<script>
+				var b1 = document.querySelector('.b1');
+				var b2 = document.querySelector('.b2');
+				var container = document.querySelector('.container');
+				//节流
+				var mxc = true
+				b1.onclick = function(e) {
+					e.stopPropagation();
+					if (!mxc) {
+						return;
+					}
+					mxc = false;
+					setTimeout(function() {
+						mxc = true;
+						b1.style.transform = "rotateY(180deg)";
+						b2.style.transform = "rotateY(0deg)";
+					}, 320);
+				};
+				b2.onclick = function(e) {
+					e.stopPropagation();
+					b2.style.transform = "rotateY(-180deg)";
+					b1.style.transform = "rotateY(0deg)";
+				}
+				container.onclick = function(e) {
+					e.stopPropagation();
+					if (container.style.display != 'none') {
+						container.style.display = 'none'
+					}
+				}
+			</script>
+	</body>
+</html>
